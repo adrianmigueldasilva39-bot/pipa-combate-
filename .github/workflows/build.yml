@@ -1,0 +1,30 @@
+# Salvar em: .github/workflows/build.yml
+name: Build Pipa Combate (PS3)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ps3dev/ps3toolchain:latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compilar PKG
+        run: |
+          export PS3DEV=/usr/local/ps3dev
+          export PSL1GHT=$PS3DEV/psl1ght
+          make
+
+      - name: Enviar PKG como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipa-combate-pkg
+          path: pipa_combate.pkg
