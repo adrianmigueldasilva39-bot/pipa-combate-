@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fonte do PARAM.SFO do Pipa Combate (convertido por sfo.py no Makefile) -->
+<paramsfo>
+  <param name="TITLE">Pipa Combate</param>
+  <param name="TITLE_ID">PIPA00001</param>
+  <param name="CONTENT_ID">UP0001-PIPA00001_00-PIPACOMBATE0001</param>
+  <param name="CATEGORY">GD</param>
+  <param name="APP_VER">01.00</param>
+  <param name="VERSION">01.00</param>
+  <param name="PS3_SYSTEM_VER">04.00</param>
+  <param name="ATTRIBUTE">0</param>
+  <param name="RESOLUTION">0</param>
+  <param name="SOUND_FORMAT">0</param>
+  <param name="PARENTAL_LEVEL">1</param>
+</paramsfo>
