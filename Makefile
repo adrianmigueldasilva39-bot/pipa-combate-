@@ -1,42 +1,38 @@
-#---------------------------------------------------------------
-# Pipa Combate - Makefile (PSL1GHT)
-# Gera: pipa_combate.elf -> EBOOT.BIN -> pipa_combate.pkg
-#---------------------------------------------------------------
-
-PS3DEV ?= /usr/local/ps3dev
-PSL1GHT ?= $(PS3DEV)/psl1ght
+ifeq ($(strip $(PSL1GHT)),)
+$(error "Defina a variavel PSL1GHT")
+endif
 include $(PSL1GHT)/ppu_rules
 
-TARGET     := pipa_combate
-PKG_DIR    := pkg
-CONTENT_ID := UP0001-PIPA00001_00-PIPACOMBATE0001
+.DEFAULT_GOAL := all
 
-SOURCES  := .
-CFLAGS   := -O2 -Wall
-LIBS     := -lsysutil -lio -lrsx -lsysmodule -lm -lc
+TARGET    := pipa
+TITLE     := Pipa Combate
+APPID     := PIPA00001
+CONTENTID := UP0001-$(APPID)_00-0000000000000000
+SFOXML    := sfo.xml
+PORTLIBS  := $(PS3DEV)/portlibs/ppu
+
+MACHDEP := -mhard-float -fmodulo-sched -ffunction-sections -fdata-sections
+CFLAGS  := -O2 -Wall -mcpu=cell $(MACHDEP) -I$(PSL1GHT)/ppu/include -I$(PORTLIBS)/include
+LDFLAGS := $(MACHDEP) -L$(PSL1GHT)/ppu/lib -L$(PORTLIBS)/lib
+LIBS    := -lrsx -lgcm_sys -lio -lsysutil -lrt -llv2 -lm
 
 all: $(TARGET).pkg
 
-$(TARGET).elf: main.c
-	$(PPU_CC) $(CFLAGS) -o $@ main.c $(LIBS)
+main.o: main.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-EBOOT.BIN: $(TARGET).elf
-	$(PS3DEV)/bin/make_self $< $@
+$(TARGET).elf: main.o
+	$(CC) $(LDFLAGS) -o $@ $< $(LIBS)
 
-$(PKG_DIR)/PS3_GAME/PARAM.SFO: sfo.xml
-	mkdir -p $(PKG_DIR)/PS3_GAME $(PKG_DIR)/USRDIR
-	$(PS3DEV)/bin/sfo.py -f sfo.xml $@
-
-$(PKG_DIR)/PS3_GAME/ICON0.PNG:
-	@test -f ICON0.PNG || (echo "Falta ICON0.PNG (320x176) na raiz do projeto" && exit 1)
-	mkdir -p $(PKG_DIR)/PS3_GAME
-	cp ICON0.PNG $@
-
-$(TARGET).pkg: EBOOT.BIN $(PKG_DIR)/PS3_GAME/PARAM.SFO $(PKG_DIR)/PS3_GAME/ICON0.PNG
-	cp EBOOT.BIN $(PKG_DIR)/USRDIR/EBOOT.BIN
-	$(PS3DEV)/bin/pkg.py --contentid $(CONTENT_ID) $(PKG_DIR) $@
+$(TARGET).pkg: $(TARGET).elf ICON0.PNG $(SFOXML)
+	rm -rf pkg
+	mkdir -p pkg/USRDIR
+	cp ICON0.PNG pkg/ICON0.PNG
+	$(PS3DEV)/bin/sprxlinker $(TARGET).elf
+	$(PS3DEV)/bin/make_self_npdrm $(TARGET).elf pkg/USRDIR/EBOOT.BIN $(CONTENTID)
+	$(PS3DEV)/bin/sfo.py --title "$(TITLE)" --appid "$(APPID)" -f $(SFOXML) pkg/PARAM.SFO
+	$(PS3DEV)/bin/pkg.py --contentid $(CONTENTID) pkg/ $@
 
 clean:
-	rm -rf $(TARGET).elf EBOOT.BIN $(PKG_DIR) $(TARGET).pkg
-
-.PHONY: all clean
+	rm -rf pkg *.o *.elf *.self *.pkg
